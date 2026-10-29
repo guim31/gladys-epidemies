@@ -1,8 +1,8 @@
 {
-  "name": "gladys-integration-template-js",
+  "name": "gladys-epidemies",
   "version": "1.0.0",
   "private": true,
-  "description": "Official starter template to build an external integration for Gladys Assistant with the JavaScript SDK.",
+  "description": "Seasonal epidemics in your French region (Sentinelles network) for Gladys Assistant: weekly rates, trends, triggers and widget.",
   "type": "module",
   "main": "index.js",
   "scripts": {

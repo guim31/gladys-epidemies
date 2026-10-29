@@ -1,67 +1,111 @@
-# Template de démonstration
+# Épidémies saisonnières (Sentinelles)
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Infections respiratoires aiguës, diarrhée aiguë (gastro-entérite) et varicelle dans votre région, telles que le
+**réseau Sentinelles** (Inserm, Sorbonne Université) les mesure chaque semaine avec des médecins généralistes : un
+appareil par région, avec le taux hebdomadaire de chaque maladie et sa tendance. Avec des déclencheurs de scène, une
+action de scène et un widget de tableau de bord.
+
+> **Information épidémiologique, pas un avis médical.** Ce sont des estimations pour toute une région, avec de larges
+> intervalles de confiance. Pour votre santé, demandez à votre médecin.
+
+Non affiliée au réseau Sentinelles.
 
 ## Ce que vous obtenez
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+- **Un appareil par zone** choisie : les 13 régions de France métropolitaine, et la France métropolitaine entière.
+- Pour chaque maladie, le **taux de la dernière semaine** (cas vus par les médecins généralistes, pour 100 000
+  habitants) et sa **tendance** par rapport à la semaine précédente (en hausse, stable, en baisse).
+- La **semaine des données** (« 43 (19 – 25 oct. 2026) »).
+- Deux **déclencheurs de scène** (un taux dépasse ou repasse sous un seuil), une **action de scène** (la semaine en
+  une phrase) et un **widget de tableau de bord**.
+
+## Prérequis
+
+- Gladys Assistant 5.3.0 ou plus récent.
+- Un accès à Internet depuis Gladys. Ni compte ni clé.
+- France métropolitaine seulement : le réseau ne couvre pas l'outre-mer.
 
 ## Configuration
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+### Réglages
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+| Réglage                            | Défaut   | Rôle                                                                            |
+| ---------------------------------- | -------- | ------------------------------------------------------------------------------- |
+| Zones                              | aucune   | Les régions à suivre (et la France métropolitaine), un appareil chacune.        |
+| Langue des noms de fonctionnalités | Français | Noms des nouveaux appareils et fonctionnalités, langue des textes et du résumé. |
 
-## Actions
+Enregistrez, puis ouvrez l'onglet **Découverte** de l'intégration et créez les appareils voulus.
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+## Appareils
 
-## Scènes
+| Fonctionnalité                         | Type   | Valeur                                                |
+| -------------------------------------- | ------ | ----------------------------------------------------- |
+| Infections respiratoires /100 000 hab. | nombre | Infections respiratoires aiguës (grippe, Covid, VRS…) |
+| Infections respiratoires, tendance     | texte  | en hausse, stable ou en baisse                        |
+| Diarrhée aiguë /100 000 hab.           | nombre | Diarrhée aiguë (gastro-entérite)                      |
+| Diarrhée aiguë, tendance               | texte  | en hausse, stable ou en baisse                        |
+| Varicelle /100 000 hab.                | nombre | Varicelle                                             |
+| Varicelle, tendance                    | texte  | en hausse, stable ou en baisse                        |
+| Semaine des données                    | texte  | Numéro de semaine ISO et ses jours                    |
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+La **tendance** est « en hausse » ou « en baisse » quand le taux a bougé de 15 % ou plus de la semaine précédente
+**et** de 5 pour 100 000 ou plus ; « stable » sinon. Les taux sont des nombres : une condition de scène comme
+« infections respiratoires ≥ 200 » fonctionne.
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+## Widget de tableau de bord
 
-## Tableau de bord
+**Épidémies saisonnières** : la zone choisie (sinon la première suivie), avec une ligne par maladie donnant son taux
+et sa tendance, en orange à la hausse et en vert à la baisse, et une légende avec la semaine et la source. Un réglage
+choisit les maladies affichées, un autre masque la légende.
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+## Déclencheurs de scène
+
+- **Le taux épidémique dépasse un seuil** : à la publication d'une nouvelle semaine, le taux d'une maladie dans une
+  zone franchit le seuil choisi (de 25 à 1 000 pour 100 000) à la hausse. Filtres : zone, maladie, seuil.
+- **Le taux épidémique repasse sous un seuil** : la même chose, à la baisse : la vague est passée chez vous.
+
+Variables : zone, maladie, taux, taux précédent, semaine. La première semaine lue après l'installation ne fait que
+poser la référence : elle ne déclenche rien. Le taux précédent est celui que l'appareil affichait : une révision des
+semaines passées par Sentinelles ne déclenche jamais deux fois un franchissement.
+
+## Action de scène
+
+**Épidémies : obtenir la semaine en une phrase** : donne, pour une zone (vide : la première suivie), une phrase
+prête pour une notification, comme « Occitanie, semaine 43 (cas pour 100 000 habitants) : Infections respiratoires
+196 (en hausse), Diarrhée aiguë 58 (en hausse), Varicelle 4 (stable). », dans la langue de la configuration, avec le
+numéro de semaine et chaque taux en sorties séparées.
+
+## Exemples de scènes
+
+- Chaque jeudi à 8 h, envoyer la phrase de votre région au groupe familial.
+- Quand la diarrhée aiguë dépasse 200 dans votre région, rappeler à tous de se laver les mains.
+- Quand les infections respiratoires repassent sous 100, annoncer la fin de la vague hivernale.
+
+## Sources, licence et quotas
+
+- Source : **réseau Sentinelles, INSERM, Sorbonne Université**, [www.sentiweb.fr](https://www.sentiweb.fr), API
+  publique Sentiweb, lue sans compte. Ce sont des estimations établies à partir des médecins généralistes du réseau
+  (avec, pour les régions, de larges intervalles de confiance).
+- Mise à jour une fois par semaine, en général le mercredi après-midi. L'API accepte 15 requêtes par 10 minutes et
+  demande de ne télécharger que ce qui a changé : l'intégration demande la version des données une fois par heure,
+  et ne télécharge les jeux de données (3 par niveau, régions ou France) que si elle a changé. Après une réponse
+  « trop de requêtes », elle attend le délai annoncé par l'API, redémarrages compris.
+- Le syndrome grippal, indicateur historique de la grippe, n'est plus surveillé : la grippe est comptée dans les
+  infections respiratoires aiguës.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **Aucune valeur après la création de l'appareil** : attendez quelques secondes le premier téléchargement ; vérifiez
+  que Gladys a accès à Internet.
+- Le statut de connexion indique que les données Sentinelles sont illisibles : l'API est injoignable ; les dernières
+  valeurs sont gardées et l'intégration réessaie toutes les heures.
+- Le statut de connexion indique que l'API demande d'attendre : sa limite de requêtes est atteinte (peut-être par un
+  autre appareil de votre réseau). L'intégration patiente et réessaie d'elle-même.
+
+## Limites
+
+- Développée et testée contre la vraie API, pas encore dans un Gladys en service : retours bienvenus.
+- Les taux régionaux sont des estimations aux intervalles de confiance larges : un petit écart n'est pas
+  significatif, d'où la marge de la tendance.
+- Pas de « niveau épidémique » officiel : Sentinelles publie des taux, et Santé publique France ne publie pas de
+  niveau épidémique régional ouvert qu'une intégration puisse lire. Les seuils des déclencheurs sont à votre choix.
