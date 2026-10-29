@@ -32,14 +32,20 @@ pushing.
 
 ```
 index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/app.js                        registers every SDK handler, returns the monitor (tests use it too)
+src/monitor.js                    hourly cycle: /version, datasets, states, triggers, status
+src/sentiweb.js                   client of the Sentiweb API (rate limit, 429 pause) + parsing
+src/incidence.js                  latest week, previous week and trend of an area and a disease
+src/devices.js                    one device per area: features, states, external ids
+src/areas.js                      the 13 regions (INSEE codes) and metropolitan France
+src/messages.js                   diseases (indicators) and texts in en/fr/de/es
+src/widgets.js                    dashboard widget `epidemics`
+src/scenes.js                     scene action `get_weekly_summary`
+src/store.js                      /data/epidemies.json (datasets, version, pause, trigger references)
+src/weeks.js                      ISO weeks (YYYYWW) and their texts
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+gladys-assistant-integration.json manifest: name, config_schema, triggers, action, widget...
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (same sections)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
@@ -70,8 +76,8 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** is in four languages (English, French, German, Spanish):
+  action messages, manifest texts, and `docs/*.md`, kept in sync.
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -250,3 +256,26 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## Épidémies (Sentinelles) : API et pièges
+
+- **API Sentiweb** (`https://www.sentiweb.fr/api/v1/datasets/rest`), sans clé. `/version` répond en **texte brut**
+  (un nombre aujourd'hui, peut-être alphanumérique demain) ; `/dataset?id=inc-<indicateur>-<RDD|PAY>&span=short`
+  donne les 10 dernières semaines (`/incidence` est déprécié, même contenu). `geo_insee` est un **nombre** pour les
+  régions (76) et `"FR"` pour la France : le convertir en chaîne. `geo_name` est déprécié, ne pas s'en servir.
+- **Limite stricte : 15 requêtes par 10 minutes et par IP** (`X-RateLimit-*`), `/version` compris. Insister après un
+  429 peut **bloquer l'IP plusieurs jours** : le client se met en pause jusqu'au `X-RateLimit-Reset` annoncé (et dès
+  qu'il ne reste que 2 requêtes), plafonné à 1 h puis doublé à chaque 429 consécutif (24 h au plus), et la pause
+  est sauvée dans `/data`. Le 29/10/2026, quelques sondages manuels ont
+  suffi à prendre un 429 : en développement, sonder avec parcimonie.
+- Indicateurs retenus : 25 (IRA, nomenclature actuelle), 6 (diarrhée aiguë), 7 (varicelle). Le 3 (syndromes
+  grippaux) est `ongoing: false` dans `/indicators` : écarté. Les jeux `-ds2` (Sentinelles + IQVIA) n'existent qu'en
+  `span=all` : trop lourds.
+- Publication le mercredi après-midi ; les semaines précédentes sont **révisées** : les déclencheurs comparent au taux
+  que l'appareil affichait (référence `seen` dans `/data`), pas à la semaine précédente du nouveau jeu.
+- Santé publique France (Odissé, `odisse.santepubliquefrance.fr`, API Opendatasoft) : pas de niveau épidémique
+  régional ouvert le 29/10/2026 (seulement des taux urgences / SOS Médecins par âge). Non utilisé.
+- Licence des données : aucune licence explicite trouvée ; l'API demande de citer « réseau Sentinelles, INSERM,
+  Sorbonne Université, https://www.sentiweb.fr » (ligne d'en-tête de ses CSV) : c'est fait dans la doc et le README.
+- Le faux Gladys du SDK date les états publiés avec `Date.now()` : le test du heartbeat simule `Date`
+  (`t.mock.timers`), l'horloge injectée du moniteur ne suffit pas.

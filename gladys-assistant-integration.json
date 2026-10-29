@@ -1,177 +1,869 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Epidemics (Sentinelles)",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Respiratory infections, gastroenteritis and chickenpox in your French region (Sentinelles network).",
+    "fr": "Infections respiratoires, gastro et varicelle dans votre région, par le réseau Sentinelles.",
+    "de": "Atemwegsinfekte, Magen-Darm und Windpocken in deiner französischen Region (Sentinelles-Netz).",
+    "es": "Infecciones respiratorias, gastroenteritis y varicela en su región francesa (red Sentinelles)."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
-  "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "docker_image": "ghcr.io/guim31/gladys-epidemies:1.0.0",
+  "gladys_version": ">=5.3.0",
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-epidemies/main/cover.png",
+  "categories": ["environment"],
+  "countries": ["FR"],
+  "transports": ["cloud"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your areas",
+        "fr": "Vos zones",
+        "de": "Deine Gebiete",
+        "es": "Sus zonas"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Choose the regions to follow, and metropolitan France if you wish: one device per area, with the weekly rate of acute respiratory infections, acute diarrhoea and chickenpox, and their trend. Save, then create the devices in the Discover tab.",
+        "fr": "Choisissez les régions à suivre, et la France métropolitaine si vous le souhaitez : un appareil par zone, avec le taux hebdomadaire d'infections respiratoires aiguës, de diarrhée aiguë et de varicelle, et leur tendance. Enregistrez, puis créez les appareils dans l'onglet Découverte.",
+        "de": "Wähle die Regionen aus, die du verfolgen willst, und auf Wunsch Frankreich (Festland): ein Gerät pro Gebiet, mit der wöchentlichen Rate akuter Atemwegsinfekte, akuter Durchfälle und Windpocken und ihrer Tendenz. Speichere und lege dann die Geräte im Tab „Entdecken“ an.",
+        "es": "Elija las regiones que desea seguir y, si lo desea, la Francia metropolitana: un dispositivo por zona, con la tasa semanal de infecciones respiratorias agudas, diarrea aguda y varicela, y su tendencia. Guarde y cree los dispositivos en la pestaña Descubrir."
+      }
+    },
+    {
+      "key": "about",
+      "type": "section",
+      "label": {
+        "en": "Sources and limits",
+        "fr": "Sources et limites",
+        "de": "Quellen und Grenzen",
+        "es": "Fuentes y límites"
+      },
+      "description": {
+        "en": "Data of the Sentinelles network (Inserm, Sorbonne Université), read without an account, updated once a week (Wednesday). Metropolitan France only. Epidemiological information, not medical advice. Not affiliated with the Sentinelles network.",
+        "fr": "Données du réseau Sentinelles (Inserm, Sorbonne Université), lues sans compte, mises à jour une fois par semaine (le mercredi). France métropolitaine seulement. Information épidémiologique, pas un avis médical. Non affiliée au réseau Sentinelles.",
+        "de": "Daten des Sentinelles-Netzes (Inserm, Sorbonne Université), ohne Konto gelesen, einmal pro Woche aktualisiert (mittwochs). Nur Frankreich (Festland). Epidemiologische Information, keine ärztliche Beratung. Nicht mit dem Sentinelles-Netz verbunden.",
+        "es": "Datos de la red Sentinelles (Inserm, Sorbonne Université), leídos sin cuenta, actualizados una vez por semana (los miércoles). Solo Francia metropolitana. Información epidemiológica, no un consejo médico. Sin afiliación con la red Sentinelles."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://www.sentiweb.fr/",
+          "label": {
+            "en": "Sentinelles network",
+            "fr": "Réseau Sentinelles",
+            "de": "Sentinelles-Netz",
+            "es": "Red Sentinelles"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "areas",
+      "type": "multi_select",
+      "label": {
+        "en": "Areas",
+        "fr": "Zones",
+        "de": "Gebiete",
+        "es": "Zonas"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
       "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+        "en": "One device per area chosen.",
+        "fr": "Un appareil par zone choisie.",
+        "de": "Ein Gerät pro gewähltem Gebiet.",
+        "es": "Un dispositivo por zona elegida."
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
       "required": false,
-      "default": "celsius",
+      "default": [],
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "84",
+          "label": {
+            "en": "Auvergne-Rhône-Alpes",
+            "fr": "Auvergne-Rhône-Alpes",
+            "de": "Auvergne-Rhône-Alpes",
+            "es": "Auvernia-Ródano-Alpes"
+          }
+        },
+        {
+          "value": "27",
+          "label": {
+            "en": "Bourgogne-Franche-Comté",
+            "fr": "Bourgogne-Franche-Comté",
+            "de": "Bourgogne-Franche-Comté",
+            "es": "Borgoña-Franco Condado"
+          }
+        },
+        {
+          "value": "53",
+          "label": {
+            "en": "Brittany",
+            "fr": "Bretagne",
+            "de": "Bretagne",
+            "es": "Bretaña"
+          }
+        },
+        {
+          "value": "24",
+          "label": {
+            "en": "Centre-Val de Loire",
+            "fr": "Centre-Val de Loire",
+            "de": "Centre-Val de Loire",
+            "es": "Centro-Valle de Loira"
+          }
+        },
+        {
+          "value": "94",
+          "label": {
+            "en": "Corsica",
+            "fr": "Corse",
+            "de": "Korsika",
+            "es": "Córcega"
+          }
+        },
+        {
+          "value": "44",
+          "label": {
+            "en": "Grand Est",
+            "fr": "Grand Est",
+            "de": "Grand Est",
+            "es": "Gran Este"
+          }
+        },
+        {
+          "value": "32",
+          "label": {
+            "en": "Hauts-de-France",
+            "fr": "Hauts-de-France",
+            "de": "Hauts-de-France",
+            "es": "Altos de Francia"
+          }
+        },
+        {
+          "value": "11",
+          "label": {
+            "en": "Île-de-France",
+            "fr": "Île-de-France",
+            "de": "Île-de-France",
+            "es": "Isla de Francia"
+          }
+        },
+        {
+          "value": "28",
+          "label": {
+            "en": "Normandy",
+            "fr": "Normandie",
+            "de": "Normandie",
+            "es": "Normandía"
+          }
+        },
+        {
+          "value": "75",
+          "label": {
+            "en": "Nouvelle-Aquitaine",
+            "fr": "Nouvelle-Aquitaine",
+            "de": "Nouvelle-Aquitaine",
+            "es": "Nueva Aquitania"
+          }
+        },
+        {
+          "value": "76",
+          "label": {
+            "en": "Occitania",
+            "fr": "Occitanie",
+            "de": "Okzitanien",
+            "es": "Occitania"
+          }
+        },
+        {
+          "value": "52",
+          "label": {
+            "en": "Pays de la Loire",
+            "fr": "Pays de la Loire",
+            "de": "Pays de la Loire",
+            "es": "País del Loira"
+          }
+        },
+        {
+          "value": "93",
+          "label": {
+            "en": "Provence-Alpes-Côte d'Azur",
+            "fr": "Provence-Alpes-Côte d'Azur",
+            "de": "Provence-Alpes-Côte d'Azur",
+            "es": "Provenza-Alpes-Costa Azul"
+          }
+        },
+        {
+          "value": "FR",
+          "label": {
+            "en": "Metropolitan France",
+            "fr": "France métropolitaine",
+            "de": "Frankreich (Festland)",
+            "es": "Francia metropolitana"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the feature names",
+        "fr": "Langue des noms de fonctionnalités",
+        "de": "Sprache der Funktionsnamen",
+        "es": "Idioma de los nombres de las funciones"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Names given to the new devices and their features, and language of their texts (trends, weeks, scene variables and summary).",
+        "fr": "Noms donnés aux nouveaux appareils et à leurs fonctionnalités, et langue de leurs textes (tendances, semaines, variables de scène et résumé).",
+        "de": "Namen neuer Geräte und ihrer Funktionen und Sprache ihrer Texte (Tendenzen, Wochen, Szenenvariablen und Zusammenfassung).",
+        "es": "Nombres de los nuevos dispositivos y de sus funciones, e idioma de sus textos (tendencias, semanas, variables de escena y resumen)."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
-    }
-  ],
-  "actions": [
-    {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
+      "default": "fr",
+      "options": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
         }
       ]
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "incidence_rose_above",
+      "label": {
+        "en": "Epidemic rate rises above a threshold",
+        "fr": "Le taux épidémique dépasse un seuil",
+        "de": "Epidemische Rate übersteigt eine Schwelle",
+        "es": "La tasa epidémica supera un umbral"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "The weekly rate of a disease in an area crosses the chosen threshold upwards (once, when the new week is published).",
+        "fr": "Le taux hebdomadaire d'une maladie dans une zone franchit le seuil choisi à la hausse (une fois, à la publication de la nouvelle semaine).",
+        "de": "Die wöchentliche Rate einer Krankheit in einem Gebiet überschreitet die gewählte Schwelle nach oben (einmal, wenn die neue Woche erscheint).",
+        "es": "La tasa semanal de una enfermedad en una zona supera el umbral elegido al alza (una vez, al publicarse la nueva semana)."
       },
       "fields": [
         {
-          "key": "device",
+          "key": "area",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "required": false,
+          "label": {
+            "en": "Area",
+            "fr": "Zone",
+            "de": "Gebiet",
+            "es": "Zona"
+          }
         },
         {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "key": "disease",
+          "type": "select",
+          "required": false,
+          "label": {
+            "en": "Disease",
+            "fr": "Maladie",
+            "de": "Krankheit",
+            "es": "Enfermedad"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "ari",
+              "label": {
+                "en": "Respiratory infections",
+                "fr": "Infections respiratoires",
+                "de": "Atemwegsinfekte",
+                "es": "Infecciones respiratorias"
+              }
+            },
+            {
+              "value": "diarrhea",
+              "label": {
+                "en": "Acute diarrhoea",
+                "fr": "Diarrhée aiguë",
+                "de": "Akuter Durchfall",
+                "es": "Diarrea aguda"
+              }
+            },
+            {
+              "value": "chickenpox",
+              "label": {
+                "en": "Chickenpox",
+                "fr": "Varicelle",
+                "de": "Windpocken",
+                "es": "Varicela"
+              }
+            }
+          ]
+        },
+        {
+          "key": "threshold",
+          "type": "select",
+          "required": true,
+          "label": {
+            "en": "Threshold",
+            "fr": "Seuil",
+            "de": "Schwelle",
+            "es": "Umbral"
+          },
+          "options": [
+            {
+              "value": "25",
+              "label": {
+                "en": "25 per 100,000",
+                "fr": "25 pour 100 000",
+                "de": "25 pro 100.000",
+                "es": "25 por 100.000"
+              }
+            },
+            {
+              "value": "50",
+              "label": {
+                "en": "50 per 100,000",
+                "fr": "50 pour 100 000",
+                "de": "50 pro 100.000",
+                "es": "50 por 100.000"
+              }
+            },
+            {
+              "value": "100",
+              "label": {
+                "en": "100 per 100,000",
+                "fr": "100 pour 100 000",
+                "de": "100 pro 100.000",
+                "es": "100 por 100.000"
+              }
+            },
+            {
+              "value": "150",
+              "label": {
+                "en": "150 per 100,000",
+                "fr": "150 pour 100 000",
+                "de": "150 pro 100.000",
+                "es": "150 por 100.000"
+              }
+            },
+            {
+              "value": "200",
+              "label": {
+                "en": "200 per 100,000",
+                "fr": "200 pour 100 000",
+                "de": "200 pro 100.000",
+                "es": "200 por 100.000"
+              }
+            },
+            {
+              "value": "300",
+              "label": {
+                "en": "300 per 100,000",
+                "fr": "300 pour 100 000",
+                "de": "300 pro 100.000",
+                "es": "300 por 100.000"
+              }
+            },
+            {
+              "value": "500",
+              "label": {
+                "en": "500 per 100,000",
+                "fr": "500 pour 100 000",
+                "de": "500 pro 100.000",
+                "es": "500 por 100.000"
+              }
+            },
+            {
+              "value": "1000",
+              "label": {
+                "en": "1,000 per 100,000",
+                "fr": "1 000 pour 100 000",
+                "de": "1.000 pro 100.000",
+                "es": "1.000 por 100.000"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "area_name",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Area",
+            "fr": "Zone",
+            "de": "Gebiet",
+            "es": "Zona"
+          }
+        },
+        {
+          "key": "disease_name",
+          "type": "string",
+          "label": {
+            "en": "Disease",
+            "fr": "Maladie",
+            "de": "Krankheit",
+            "es": "Enfermedad"
+          }
+        },
+        {
+          "key": "incidence",
+          "type": "number",
+          "label": {
+            "en": "Rate per 100,000",
+            "fr": "Taux pour 100 000",
+            "de": "Rate pro 100.000",
+            "es": "Tasa por 100.000"
+          }
+        },
+        {
+          "key": "previous_incidence",
+          "type": "number",
+          "label": {
+            "en": "Previous rate",
+            "fr": "Taux précédent",
+            "de": "Vorherige Rate",
+            "es": "Tasa anterior"
+          }
+        },
+        {
+          "key": "week",
+          "type": "string",
+          "label": {
+            "en": "Week of the data",
+            "fr": "Semaine des données",
+            "de": "Datenwoche",
+            "es": "Semana de los datos"
+          }
+        }
+      ]
+    },
+    {
+      "key": "incidence_fell_below",
+      "label": {
+        "en": "Epidemic rate falls below a threshold",
+        "fr": "Le taux épidémique repasse sous un seuil",
+        "de": "Epidemische Rate fällt unter eine Schwelle",
+        "es": "La tasa epidémica baja de un umbral"
+      },
+      "description": {
+        "en": "The weekly rate of a disease in an area goes back below the chosen threshold (once, when the new week is published).",
+        "fr": "Le taux hebdomadaire d'une maladie dans une zone repasse sous le seuil choisi (une fois, à la publication de la nouvelle semaine).",
+        "de": "Die wöchentliche Rate einer Krankheit in einem Gebiet fällt wieder unter die gewählte Schwelle (einmal, wenn die neue Woche erscheint).",
+        "es": "La tasa semanal de una enfermedad en una zona vuelve a bajar del umbral elegido (una vez, al publicarse la nueva semana)."
+      },
+      "fields": [
+        {
+          "key": "area",
+          "type": "select",
+          "source": "devices",
+          "required": false,
+          "label": {
+            "en": "Area",
+            "fr": "Zone",
+            "de": "Gebiet",
+            "es": "Zona"
+          }
+        },
+        {
+          "key": "disease",
+          "type": "select",
+          "required": false,
+          "label": {
+            "en": "Disease",
+            "fr": "Maladie",
+            "de": "Krankheit",
+            "es": "Enfermedad"
+          },
+          "options": [
+            {
+              "value": "ari",
+              "label": {
+                "en": "Respiratory infections",
+                "fr": "Infections respiratoires",
+                "de": "Atemwegsinfekte",
+                "es": "Infecciones respiratorias"
+              }
+            },
+            {
+              "value": "diarrhea",
+              "label": {
+                "en": "Acute diarrhoea",
+                "fr": "Diarrhée aiguë",
+                "de": "Akuter Durchfall",
+                "es": "Diarrea aguda"
+              }
+            },
+            {
+              "value": "chickenpox",
+              "label": {
+                "en": "Chickenpox",
+                "fr": "Varicelle",
+                "de": "Windpocken",
+                "es": "Varicela"
+              }
+            }
+          ]
+        },
+        {
+          "key": "threshold",
+          "type": "select",
+          "required": true,
+          "label": {
+            "en": "Threshold",
+            "fr": "Seuil",
+            "de": "Schwelle",
+            "es": "Umbral"
+          },
+          "options": [
+            {
+              "value": "25",
+              "label": {
+                "en": "25 per 100,000",
+                "fr": "25 pour 100 000",
+                "de": "25 pro 100.000",
+                "es": "25 por 100.000"
+              }
+            },
+            {
+              "value": "50",
+              "label": {
+                "en": "50 per 100,000",
+                "fr": "50 pour 100 000",
+                "de": "50 pro 100.000",
+                "es": "50 por 100.000"
+              }
+            },
+            {
+              "value": "100",
+              "label": {
+                "en": "100 per 100,000",
+                "fr": "100 pour 100 000",
+                "de": "100 pro 100.000",
+                "es": "100 por 100.000"
+              }
+            },
+            {
+              "value": "150",
+              "label": {
+                "en": "150 per 100,000",
+                "fr": "150 pour 100 000",
+                "de": "150 pro 100.000",
+                "es": "150 por 100.000"
+              }
+            },
+            {
+              "value": "200",
+              "label": {
+                "en": "200 per 100,000",
+                "fr": "200 pour 100 000",
+                "de": "200 pro 100.000",
+                "es": "200 por 100.000"
+              }
+            },
+            {
+              "value": "300",
+              "label": {
+                "en": "300 per 100,000",
+                "fr": "300 pour 100 000",
+                "de": "300 pro 100.000",
+                "es": "300 por 100.000"
+              }
+            },
+            {
+              "value": "500",
+              "label": {
+                "en": "500 per 100,000",
+                "fr": "500 pour 100 000",
+                "de": "500 pro 100.000",
+                "es": "500 por 100.000"
+              }
+            },
+            {
+              "value": "1000",
+              "label": {
+                "en": "1,000 per 100,000",
+                "fr": "1 000 pour 100 000",
+                "de": "1.000 pro 100.000",
+                "es": "1.000 por 100.000"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "area_name",
+          "type": "string",
+          "label": {
+            "en": "Area",
+            "fr": "Zone",
+            "de": "Gebiet",
+            "es": "Zona"
+          }
+        },
+        {
+          "key": "disease_name",
+          "type": "string",
+          "label": {
+            "en": "Disease",
+            "fr": "Maladie",
+            "de": "Krankheit",
+            "es": "Enfermedad"
+          }
+        },
+        {
+          "key": "incidence",
+          "type": "number",
+          "label": {
+            "en": "Rate per 100,000",
+            "fr": "Taux pour 100 000",
+            "de": "Rate pro 100.000",
+            "es": "Tasa por 100.000"
+          }
+        },
+        {
+          "key": "previous_incidence",
+          "type": "number",
+          "label": {
+            "en": "Previous rate",
+            "fr": "Taux précédent",
+            "de": "Vorherige Rate",
+            "es": "Tasa anterior"
+          }
+        },
+        {
+          "key": "week",
+          "type": "string",
+          "label": {
+            "en": "Week of the data",
+            "fr": "Semaine des données",
+            "de": "Datenwoche",
+            "es": "Semana de los datos"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "get_weekly_summary",
+      "label": {
+        "en": "Epidemics: get the week in one sentence",
+        "fr": "Épidémies : obtenir la semaine en une phrase",
+        "de": "Epidemien: die Woche in einem Satz abrufen",
+        "es": "Epidemias: obtener la semana en una frase"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "The latest rates of an area and their trend, in a sentence ready for a notification (language of the configuration).",
+        "fr": "Les derniers taux d'une zone et leur tendance, en une phrase prête pour une notification (langue de la configuration).",
+        "de": "Die letzten Raten eines Gebiets und ihre Tendenz, in einem fertigen Satz für eine Benachrichtigung (Sprache der Konfiguration).",
+        "es": "Las últimas tasas de una zona y su tendencia, en una frase lista para una notificación (idioma de la configuración)."
+      },
+      "timeout_seconds": 10,
       "fields": [
         {
-          "key": "device",
+          "key": "area",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "required": false,
+          "label": {
+            "en": "Area",
+            "fr": "Zone",
+            "de": "Gebiet",
+            "es": "Zona"
+          },
+          "description": {
+            "en": "Empty: the first area followed.",
+            "fr": "Vide : la première zone suivie.",
+            "de": "Leer: das erste verfolgte Gebiet.",
+            "es": "Vacío: la primera zona seguida."
+          }
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary",
+            "fr": "Résumé",
+            "de": "Zusammenfassung",
+            "es": "Resumen"
+          }
+        },
+        {
+          "key": "area_name",
+          "type": "string",
+          "label": {
+            "en": "Area",
+            "fr": "Zone",
+            "de": "Gebiet",
+            "es": "Zona"
+          }
+        },
+        {
+          "key": "week",
+          "type": "number",
+          "label": {
+            "en": "Week number",
+            "fr": "Numéro de semaine",
+            "de": "Wochennummer",
+            "es": "Número de semana"
+          }
+        },
+        {
+          "key": "ari_incidence",
+          "type": "number",
+          "label": {
+            "en": "Respiratory infections /100,000",
+            "fr": "Infections respiratoires /100 000",
+            "de": "Atemwegsinfekte /100.000",
+            "es": "Infecciones respiratorias /100.000"
+          }
+        },
+        {
+          "key": "diarrhea_incidence",
+          "type": "number",
+          "label": {
+            "en": "Acute diarrhoea /100,000",
+            "fr": "Diarrhée aiguë /100 000",
+            "de": "Akuter Durchfall /100.000",
+            "es": "Diarrea aguda /100.000"
+          }
+        },
+        {
+          "key": "chickenpox_incidence",
+          "type": "number",
+          "label": {
+            "en": "Chickenpox /100,000",
+            "fr": "Varicelle /100 000",
+            "de": "Windpocken /100.000",
+            "es": "Varicela /100.000"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
+      "key": "epidemics",
+      "label": {
+        "en": "Seasonal epidemics",
+        "fr": "Épidémies saisonnières",
+        "de": "Saisonale Epidemien",
+        "es": "Epidemias estacionales"
+      },
       "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+        "en": "Weekly rate and trend of each disease in one of your areas.",
+        "fr": "Taux hebdomadaire et tendance de chaque maladie dans une de vos zones.",
+        "de": "Wöchentliche Rate und Tendenz jeder Krankheit in einem deiner Gebiete.",
+        "es": "Tasa semanal y tendencia de cada enfermedad en una de sus zonas."
       },
       "icon": "activity",
-      "action_timeout_seconds": 15
+      "settings": [
+        {
+          "key": "area",
+          "type": "select",
+          "source": "devices",
+          "required": false,
+          "label": {
+            "en": "Area",
+            "fr": "Zone",
+            "de": "Gebiet",
+            "es": "Zona"
+          },
+          "description": {
+            "en": "Empty: the first area followed.",
+            "fr": "Vide : la première zone suivie.",
+            "de": "Leer: das erste verfolgte Gebiet.",
+            "es": "Vacío: la primera zona seguida."
+          }
+        },
+        {
+          "key": "diseases",
+          "type": "multi_select",
+          "required": false,
+          "default": ["ari", "diarrhea", "chickenpox"],
+          "label": {
+            "en": "Diseases shown",
+            "fr": "Maladies affichées",
+            "de": "Angezeigte Krankheiten",
+            "es": "Enfermedades mostradas"
+          },
+          "options": [
+            {
+              "value": "ari",
+              "label": {
+                "en": "Respiratory infections",
+                "fr": "Infections respiratoires",
+                "de": "Atemwegsinfekte",
+                "es": "Infecciones respiratorias"
+              }
+            },
+            {
+              "value": "diarrhea",
+              "label": {
+                "en": "Acute diarrhoea",
+                "fr": "Diarrhée aiguë",
+                "de": "Akuter Durchfall",
+                "es": "Diarrea aguda"
+              }
+            },
+            {
+              "value": "chickenpox",
+              "label": {
+                "en": "Chickenpox",
+                "fr": "Varicelle",
+                "de": "Windpocken",
+                "es": "Varicela"
+              }
+            }
+          ]
+        },
+        {
+          "key": "show_source",
+          "type": "boolean",
+          "default": true,
+          "label": {
+            "en": "Show the week and the source",
+            "fr": "Afficher la semaine et la source",
+            "de": "Woche und Quelle zeigen",
+            "es": "Mostrar la semana y la fuente"
+          }
+        }
+      ]
     }
   ]
 }

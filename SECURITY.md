@@ -30,6 +30,14 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration handles:
+
+- `/data/epidemies.json`: the datasets read from the Sentinelles API (public, aggregated data:
+  weekly rates per region), their version, the time of the last check, a rate-limit pause, and the
+  last week seen per area and disease. No personal data.
+- No secret: the API needs no account nor key.
+- Network: outgoing HTTPS only, to `www.sentiweb.fr`. The container listens on no port.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and the third-party services the integration talks to.

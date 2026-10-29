@@ -1,0 +1,160 @@
+{
+  "meta": {
+    "query": {
+      "period": [199049, 202643],
+      "geo": ["PAY", 0],
+      "geo_ref": "insee",
+      "indicator": 7,
+      "type": "all",
+      "conf_int": true,
+      "compact": false,
+      "age_group": false,
+      "span": "short"
+    },
+    "process": {
+      "strata": "red"
+    },
+    "time": "week",
+    "columns": {
+      "time": "week",
+      "indicator": "indicator",
+      "value": ["inc", "inc_low", "inc_up", "inc100", "inc100_low", "inc100_up"],
+      "geo": "geo_insee"
+    },
+    "compact": false
+  },
+  "data": [
+    {
+      "week": 202643,
+      "indicator": 7,
+      "inc": 4736,
+      "inc_low": 2131,
+      "inc_up": 7341,
+      "inc100": 7,
+      "inc100_low": 3,
+      "inc100_up": 11,
+      "geo_insee": "FR",
+      "geo_name": "France"
+    },
+    {
+      "week": 202642,
+      "indicator": 7,
+      "inc": 2238,
+      "inc_low": 886,
+      "inc_up": 3590,
+      "inc100": 3,
+      "inc100_low": 1,
+      "inc100_up": 5,
+      "geo_insee": "FR",
+      "geo_name": "France"
+    },
+    {
+      "week": 202641,
+      "indicator": 7,
+      "inc": 2590,
+      "inc_low": 1247,
+      "inc_up": 3933,
+      "inc100": 4,
+      "inc100_low": 2,
+      "inc100_up": 6,
+      "geo_insee": "FR",
+      "geo_name": "France"
+    },
+    {
+      "week": 202640,
+      "indicator": 7,
+      "inc": 1918,
+      "inc_low": 812,
+      "inc_up": 3024,
+      "inc100": 3,
+      "inc100_low": 1,
+      "inc100_up": 5,
+      "geo_insee": "FR",
+      "geo_name": "France"
+    },
+    {
+      "week": 202639,
+      "indicator": 7,
+      "inc": 1224,
+      "inc_low": 234,
+      "inc_up": 2214,
+      "inc100": 2,
+      "inc100_low": 1,
+      "inc100_up": 3,
+      "geo_insee": "FR",
+      "geo_name": "France"
+    },
+    {
+      "week": 202638,
+      "indicator": 7,
+      "inc": 592,
+      "inc_low": 0,
+      "inc_up": 1329,
+      "inc100": 1,
+      "inc100_low": 0,
+      "inc100_up": 2,
+      "geo_insee": "FR",
+      "geo_name": "France"
+    },
+    {
+      "week": 202637,
+      "indicator": 7,
+      "inc": 862,
+      "inc_low": 43,
+      "inc_up": 1681,
+      "inc100": 1,
+      "inc100_low": 0,
+      "inc100_up": 2,
+      "geo_insee": "FR",
+      "geo_name": "France"
+    },
+    {
+      "week": 202636,
+      "indicator": 7,
+      "inc": 975,
+      "inc_low": 167,
+      "inc_up": 1783,
+      "inc100": 1,
+      "inc100_low": 0,
+      "inc100_up": 2,
+      "geo_insee": "FR",
+      "geo_name": "France"
+    },
+    {
+      "week": 202635,
+      "indicator": 7,
+      "inc": 1130,
+      "inc_low": 186,
+      "inc_up": 2074,
+      "inc100": 2,
+      "inc100_low": 1,
+      "inc100_up": 3,
+      "geo_insee": "FR",
+      "geo_name": "France"
+    },
+    {
+      "week": 202634,
+      "indicator": 7,
+      "inc": 1682,
+      "inc_low": 301,
+      "inc_up": 3063,
+      "inc100": 2,
+      "inc100_low": 0,
+      "inc100_up": 4,
+      "geo_insee": "FR",
+      "geo_name": "France"
+    },
+    {
+      "week": 202633,
+      "indicator": 7,
+      "inc": 1665,
+      "inc_low": 392,
+      "inc_up": 2938,
+      "inc100": 2,
+      "inc100_low": 0,
+      "inc100_up": 4,
+      "geo_insee": "FR",
+      "geo_name": "France"
+    }
+  ]
+}
