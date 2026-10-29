@@ -291,3 +291,50 @@ test("the container's own timer refreshes, without onPoll", async (t) => {
     await world.cleanup();
   }
 });
+
+test('a broken dataset holds the others back neither, nor is asked again within 10 minutes', async () => {
+  const calls = [];
+  const broken = (url) => url.includes('inc-6-RDD');
+  const world = await createWorld({
+    created: ['76'],
+    config: { areas: ['76'] },
+    fetch: fixtureFetch({ calls, overrides: [[broken, () => response(500)]] }),
+  });
+  try {
+    const ids = areaIds(world.gladys, '76');
+    assert.equal(world.fake.lastState(ids.ari_incidence), 196);
+    assert.equal(world.fake.lastState(ids.chickenpox_incidence), 4);
+    assert.equal(world.fake.connectionStatus.connected, false);
+    world.clock.now += 5 * MINUTE;
+    await world.monitor.runCycle();
+    assert.equal(calls.length, 4, 'no retry within 10 minutes');
+    world.clock.now += HOUR;
+    await world.monitor.runCycle();
+    assert.deepEqual(paths(calls.slice(4)), ['/version', '/dataset?id=inc-6-RDD&span=short']);
+  } finally {
+    await world.cleanup();
+  }
+});
+
+test('a reference older than 3 weeks is replaced without firing', async () => {
+  const state = { publication: 'previous' };
+  const world = await createWorld({
+    created: ['76'],
+    config: { areas: ['76'] },
+    fetch: fixtureFetch({ state }),
+  });
+  try {
+    // As if the area had been followed long ago, at another level.
+    world.monitor.seen['76:ari'] = { week: 202630, value: 10 };
+    state.publication = 'latest';
+    world.clock.now += HOUR;
+    await world.monitor.runCycle();
+    assert.deepEqual(
+      world.fake.sceneEvents.filter((e) => e.data.disease === 'ari'),
+      [],
+    );
+    assert.deepEqual(world.monitor.seen['76:ari'], { week: 202643, value: 196 });
+  } finally {
+    await world.cleanup();
+  }
+});

@@ -29,13 +29,15 @@ export function weekText(week, language) {
     year: 'numeric',
     timeZone: 'UTC',
   });
-  const start =
-    monday.getUTCMonth() === sunday.getUTCMonth()
-      ? day.format(monday)
-      : new Intl.DateTimeFormat(locale, {
-          day: 'numeric',
-          month: 'short',
-          timeZone: 'UTC',
-        }).format(monday);
+  let start = day.format(monday);
+  if (monday.getUTCFullYear() !== sunday.getUTCFullYear()) {
+    start = full.format(monday);
+  } else if (monday.getUTCMonth() !== sunday.getUTCMonth()) {
+    start = new Intl.DateTimeFormat(locale, {
+      day: 'numeric',
+      month: 'short',
+      timeZone: 'UTC',
+    }).format(monday);
+  }
   return `${week % 100} (${start} – ${full.format(sunday)})`;
 }

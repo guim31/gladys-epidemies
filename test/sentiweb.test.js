@@ -120,3 +120,16 @@ test('server and network errors', async () => {
   const notJson = new SentiwebClient({ fetch: async () => response(200, '<html>') });
   await assert.rejects(notJson.dataset('inc-6-PAY'), /not JSON/);
 });
+
+test('an absolute or huge reset never pauses for more than an hour', async () => {
+  const clock = { now: Date.parse('2026-10-29T07:00:00Z') };
+  const epoch = String(Math.floor(clock.now / 1000) + 3 * 24 * 3600);
+  const client = new SentiwebClient({
+    now: () => clock.now,
+    fetch: async () => response(429, '', { 'X-RateLimit-Reset': epoch }),
+  });
+  await assert.rejects(client.version());
+  assert.equal(client.pausedUntil, clock.now + 3600 * 1000);
+  client.restorePause(clock.now + 50 * 365 * 24 * 3600 * 1000);
+  assert.equal(client.pausedUntil, clock.now + 3600 * 1000);
+});

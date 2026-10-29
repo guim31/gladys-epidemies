@@ -5,7 +5,7 @@
 //
 // Requests, the API allowing 15 per 10 minutes: one /version per cycle, then
 // one dataset per disease and level (regions, France) only when the version
-// changed or a dataset is missing; at most 9 per weekly update. The datasets,
+// changed or a dataset is missing; at most 7 per weekly update. The datasets,
 // the version and a rate-limit pause survive restarts (src/store.js), so a
 // container that restarts in a loop asks for /version at most every
 // 10 minutes and never during a pause.
@@ -29,7 +29,7 @@ import { areaIds, buildDevice, codeOfExternalId, deviceStates } from './devices.
 import { areaSnapshot, latestOf } from './incidence.js';
 import { DISEASES, DISEASE_NAMES, STATUS } from './messages.js';
 import { datasetId, SentiwebClient } from './sentiweb.js';
-import { weekText } from './weeks.js';
+import { mondayOf, weekText } from './weeks.js';
 
 const logger = createLogger({ name: 'epidemies-monitor' });
 
@@ -49,6 +49,7 @@ const HOUR = 60 * MINUTE;
 export const HEARTBEAT_MS = 12 * HOUR;
 // Not two /version requests closer than this, restarts included.
 const MIN_CHECK_GAP_MS = 10 * MINUTE;
+const MAX_REFERENCE_GAP_MS = 21 * 24 * HOUR;
 // requestWidgetRefresh is rate-limited to one call every 10 s by the core.
 const WIDGET_REFRESH_GAP_MS = 10 * 1000;
 
@@ -74,6 +75,9 @@ export class Monitor {
     this.datasets = {};
     // "<area>:<disease>" → { week, value }: the reference of the triggers
     this.seen = {};
+    // dataset id → time of its last failed download: not retried within the gap
+    this.failedAt = {};
+    this.retryTimer = null;
     this.lastCycleAt = null;
     this.running = null;
     this.failing = null; // null, 'source' or 'rate'
@@ -88,8 +92,11 @@ export class Monitor {
     const saved = await this.store.load();
     this.version = typeof saved.version === 'string' ? saved.version : null;
     this.checkedAt = Number.isFinite(saved.checkedAt) ? saved.checkedAt : 0;
-    if (Number.isFinite(saved.pausedUntil)) {
-      this.client.pausedUntil = saved.pausedUntil;
+    this.client.restorePause(saved.pausedUntil);
+    for (const [id, at] of Object.entries(saved.failedAt ?? {})) {
+      if (Number.isFinite(at)) {
+        this.failedAt[id] = at;
+      }
     }
     for (const [id, entry] of Object.entries(saved.datasets ?? {})) {
       if (Array.isArray(entry?.records)) {
@@ -195,7 +202,9 @@ export class Monitor {
     const needed = this.neededIds();
     let failure = null;
     let downloaded = false;
-    const missing = needed.some((id) => !this.datasets[id]);
+    const missing = needed.some(
+      (id) => !this.datasets[id] && !(now - (this.failedAt[id] ?? -Infinity) < MIN_CHECK_GAP_MS),
+    );
     const recent = now - this.checkedAt < MIN_CHECK_GAP_MS && now >= this.checkedAt;
     // The API was asked: the check time and a pause must survive a restart.
     const asked = needed.length > 0 && (missing || !recent);
@@ -204,6 +213,7 @@ export class Monitor {
         downloaded = await this.download(needed);
       } catch (err) {
         failure = err;
+        downloaded = Boolean(err.downloaded);
       }
     }
     await this.setFailure(failure);
@@ -215,6 +225,22 @@ export class Monitor {
     if (downloaded) {
       this.refreshWidget();
     }
+    if (failure?.rateLimited) {
+      this.retryAfterPause();
+    }
+  }
+
+  /** One more cycle when the pause ends, rather than at the next hour. */
+  retryAfterPause() {
+    if (!this.timers || this.retryTimer) {
+      return;
+    }
+    const delay = Math.max(0, this.client.pausedUntil - this.now()) + 1000;
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = null;
+      this.runCycle();
+    }, delay);
+    this.retryTimer.unref?.();
   }
 
   /** Reads /version, then the datasets out of date. True if one was downloaded. */
@@ -222,16 +248,31 @@ export class Monitor {
     const version = await this.client.version();
     this.checkedAt = this.now();
     let downloaded = false;
+    let failure = null;
     for (const id of needed) {
       if (this.datasets[id]?.version === version) {
         continue;
       }
-      const records = await this.client.dataset(id);
-      this.datasets[id] = { version, records };
-      downloaded = true;
-      logger.debug(`Read ${id} (${records.length} records, version ${version})`);
+      try {
+        const records = await this.client.dataset(id);
+        this.datasets[id] = { version, records };
+        delete this.failedAt[id];
+        downloaded = true;
+        logger.debug(`Read ${id} (${records.length} records, version ${version})`);
+      } catch (err) {
+        if (err.rateLimited) {
+          throw err; // nothing more can be asked
+        }
+        // One broken dataset does not hold the others back.
+        this.failedAt[id] = this.now();
+        failure ??= err;
+      }
     }
     this.version = version;
+    if (failure) {
+      failure.downloaded = downloaded;
+      throw failure;
+    }
     return downloaded;
   }
 
@@ -252,7 +293,9 @@ export class Monitor {
         }
         this.seen[ref] = { week: entry.week, value: entry.value };
         moved = true;
-        if (previous) {
+        // A reference more than 3 weeks old (area followed again, long outage)
+        // says nothing about this week: it is only replaced.
+        if (previous && mondayOf(entry.week) - mondayOf(previous.week) <= MAX_REFERENCE_GAP_MS) {
           await this.fireTriggers(code, key, previous.value, entry);
         }
       }
@@ -396,6 +439,7 @@ export class Monitor {
       version: this.version,
       checkedAt: this.checkedAt,
       pausedUntil: this.client.pausedUntil,
+      failedAt: this.failedAt,
       datasets: this.datasets,
       seen: this.seen,
     });
@@ -404,8 +448,10 @@ export class Monitor {
   async stop() {
     clearInterval(this.cycleTimer);
     clearTimeout(this.refreshTimer);
+    clearTimeout(this.retryTimer);
     this.cycleTimer = null;
     this.refreshTimer = null;
+    this.retryTimer = null;
     await this.running;
     await this.store.flush();
   }

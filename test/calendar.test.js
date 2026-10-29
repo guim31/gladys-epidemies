@@ -24,7 +24,7 @@ test('week texts in the four languages', () => {
   assert.equal(weekText(202643, 'fr'), '43 (19 – 25 oct. 2026)');
   assert.match(weekText(202643, 'de'), /^43 \(19 – 25\. Okt\. 2026\)$/);
   assert.match(weekText(202643, 'es'), /^43 \(19 – 25 oct 2026\)$/);
-  assert.match(weekText(202601, 'fr'), /^1 \(29 déc\. – 4 janv\. 2026\)$/);
+  assert.match(weekText(202601, 'fr'), /^1 \(29 déc\. 2025 – 4 janv\. 2026\)$/);
 });
 
 test('trend: 15 % and 5 per 100,000 at least', () => {

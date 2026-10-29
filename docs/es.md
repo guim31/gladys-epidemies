@@ -61,7 +61,7 @@ enfermedades mostradas y otro oculta la leyenda.
 ## Disparadores de escena
 
 - **La tasa epidémica supera un umbral**: al publicarse una nueva semana, la tasa de una enfermedad en una zona supera
-  el umbral elegido (de 25 a 1000 por 100.000) al alza. Filtros: zona, enfermedad, umbral.
+  el umbral elegido (de 25 a 1.000 por 100.000) al alza. Filtros: zona, enfermedad, umbral.
 - **La tasa epidémica baja de un umbral**: lo mismo, a la baja: la ola ha pasado en su zona.
 
 Variables: zona, enfermedad, tasa, tasa anterior, semana. La primera semana leída tras la instalación solo fija la

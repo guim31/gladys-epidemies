@@ -18,6 +18,9 @@ const TIMEOUT_MS = 30 * 1000;
 const RESERVE = 2;
 const MIN_PAUSE_MS = 60 * 1000;
 const DEFAULT_PAUSE_MS = 10 * 60 * 1000;
+// A longer announced pause (an IP blocked for days) is waited for in steps:
+// one request an hour at most, never a pause stored for years.
+export const MAX_PAUSE_MS = 60 * 60 * 1000;
 
 export class SourceError extends Error {
   constructor(message, { rateLimited = false } = {}) {
@@ -49,9 +52,22 @@ export class SentiwebClient {
     return this.now() < this.pausedUntil;
   }
 
-  pause(seconds) {
-    const ms = Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : DEFAULT_PAUSE_MS;
-    this.pausedUntil = Math.max(this.pausedUntil, this.now() + Math.max(ms, MIN_PAUSE_MS));
+  /** `reset`: seconds to wait, or (above 1e9) an epoch in seconds. */
+  pause(reset) {
+    const now = this.now();
+    let ms = DEFAULT_PAUSE_MS;
+    if (Number.isFinite(reset) && reset > 0) {
+      ms = reset > 1e9 ? reset * 1000 - now : reset * 1000;
+    }
+    ms = Math.min(Math.max(ms, MIN_PAUSE_MS), MAX_PAUSE_MS);
+    this.pausedUntil = Math.min(Math.max(this.pausedUntil, now + ms), now + MAX_PAUSE_MS);
+  }
+
+  /** Restores a saved pause, never longer than MAX_PAUSE_MS from now. */
+  restorePause(until) {
+    if (Number.isFinite(until)) {
+      this.pausedUntil = Math.min(until, this.now() + MAX_PAUSE_MS);
+    }
   }
 
   async request(path) {
