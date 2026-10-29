@@ -19,8 +19,10 @@ const RESERVE = 2;
 const MIN_PAUSE_MS = 60 * 1000;
 const DEFAULT_PAUSE_MS = 10 * 60 * 1000;
 // A longer announced pause (an IP blocked for days) is waited for in steps:
-// one request an hour at most, never a pause stored for years.
-export const MAX_PAUSE_MS = 60 * 60 * 1000;
+// an hour after a first 429, then twice as long after each new one in a row
+// (2 h, 4 h... 24 h at most), never a pause stored for years.
+const HOUR_MS = 60 * 60 * 1000;
+export const MAX_PAUSE_MS = 24 * HOUR_MS;
 
 export class SourceError extends Error {
   constructor(message, { rateLimited = false } = {}) {
@@ -45,6 +47,8 @@ export class SentiwebClient {
     this.fetch = fetch ?? globalThis.fetch;
     this.now = now ?? (() => Date.now());
     this.pausedUntil = 0;
+    // 429 answers in a row, without a success between them
+    this.strikes = 0;
   }
 
   /** True while the client refuses to send anything (rate limit). */
@@ -59,15 +63,17 @@ export class SentiwebClient {
     if (Number.isFinite(reset) && reset > 0) {
       ms = reset > 1e9 ? reset * 1000 - now : reset * 1000;
     }
-    ms = Math.min(Math.max(ms, MIN_PAUSE_MS), MAX_PAUSE_MS);
-    this.pausedUntil = Math.min(Math.max(this.pausedUntil, now + ms), now + MAX_PAUSE_MS);
+    const cap = Math.min(HOUR_MS * 2 ** Math.max(0, this.strikes - 1), MAX_PAUSE_MS);
+    ms = Math.min(Math.max(ms, MIN_PAUSE_MS), cap);
+    this.pausedUntil = Math.min(Math.max(this.pausedUntil, now + ms), now + cap);
   }
 
   /** Restores a saved pause, never longer than MAX_PAUSE_MS from now. */
-  restorePause(until) {
+  restorePause(until, strikes = 0) {
     if (Number.isFinite(until)) {
       this.pausedUntil = Math.min(until, this.now() + MAX_PAUSE_MS);
     }
+    this.strikes = Number.isInteger(strikes) && strikes > 0 ? strikes : 0;
   }
 
   async request(path) {
@@ -88,9 +94,11 @@ export class SentiwebClient {
     const header = (name) => res.headers?.get?.(name) ?? null;
     const reset = Number(header('x-ratelimit-reset'));
     if (res.status === 429) {
+      this.strikes += 1;
       this.pause(reset);
       throw new SourceError('rate limit of the Sentinelles API (HTTP 429)', { rateLimited: true });
     }
+    this.strikes = 0;
     const remaining = header('x-ratelimit-remaining');
     if (remaining !== null && Number(remaining) <= RESERVE) {
       // The answer is good, but the next requests would hit the limit.

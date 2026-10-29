@@ -265,7 +265,8 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
   régions (76) et `"FR"` pour la France : le convertir en chaîne. `geo_name` est déprécié, ne pas s'en servir.
 - **Limite stricte : 15 requêtes par 10 minutes et par IP** (`X-RateLimit-*`), `/version` compris. Insister après un
   429 peut **bloquer l'IP plusieurs jours** : le client se met en pause jusqu'au `X-RateLimit-Reset` annoncé (et dès
-  qu'il ne reste que 2 requêtes), et la pause est sauvée dans `/data`. Le 29/10/2026, quelques sondages manuels ont
+  qu'il ne reste que 2 requêtes), plafonné à 1 h puis doublé à chaque 429 consécutif (24 h au plus), et la pause
+  est sauvée dans `/data`. Le 29/10/2026, quelques sondages manuels ont
   suffi à prendre un 429 : en développement, sonder avec parcimonie.
 - Indicateurs retenus : 25 (IRA, nomenclature actuelle), 6 (diarrhée aiguë), 7 (varicelle). Le 3 (syndromes
   grippaux) est `ongoing: false` dans `/indicators` : écarté. Les jeux `-ds2` (Sentinelles + IQVIA) n'existent qu'en

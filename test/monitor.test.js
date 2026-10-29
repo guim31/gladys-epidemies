@@ -338,3 +338,31 @@ test('a reference older than 3 weeks is replaced without firing', async () => {
     await world.cleanup();
   }
 });
+
+test('after a pause hit while downloading, the next cycle downloads at once', async () => {
+  const calls = [];
+  let tight = true;
+  const fetch = fixtureFetch({
+    calls,
+    overrides: [
+      [
+        (url) => tight && url.endsWith('/version'),
+        () =>
+          response(200, '1793207247', { 'X-RateLimit-Remaining': '1', 'X-RateLimit-Reset': '120' }),
+      ],
+    ],
+  });
+  const world = await createWorld({ created: ['76'], config: { areas: ['76'] }, fetch });
+  try {
+    assert.equal(calls.length, 1, 'the window ran out after /version');
+    assert.equal(world.fake.connectionStatus.connected, false);
+    tight = false;
+    world.clock.now += 3 * MINUTE;
+    await world.monitor.runCycle();
+    assert.equal(calls.length, 5);
+    assert.equal(world.fake.lastState(areaIds(world.gladys, '76').ari_incidence), 196);
+    assert.equal(world.fake.connectionStatus.connected, true);
+  } finally {
+    await world.cleanup();
+  }
+});

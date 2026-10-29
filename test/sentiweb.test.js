@@ -121,7 +121,7 @@ test('server and network errors', async () => {
   await assert.rejects(notJson.dataset('inc-6-PAY'), /not JSON/);
 });
 
-test('an absolute or huge reset never pauses for more than an hour', async () => {
+test('an absolute reset is read as such, and a first pause lasts an hour at most', async () => {
   const clock = { now: Date.parse('2026-10-29T07:00:00Z') };
   const epoch = String(Math.floor(clock.now / 1000) + 3 * 24 * 3600);
   const client = new SentiwebClient({
@@ -131,5 +131,25 @@ test('an absolute or huge reset never pauses for more than an hour', async () =>
   await assert.rejects(client.version());
   assert.equal(client.pausedUntil, clock.now + 3600 * 1000);
   client.restorePause(clock.now + 50 * 365 * 24 * 3600 * 1000);
-  assert.equal(client.pausedUntil, clock.now + 3600 * 1000);
+  assert.equal(client.pausedUntil, clock.now + 24 * 3600 * 1000);
+});
+
+test('429 answers in a row back off up to 24 hours; a success resets them', async () => {
+  const clock = { now: 0 };
+  let limited = true;
+  const client = new SentiwebClient({
+    now: () => clock.now,
+    fetch: async () =>
+      limited ? response(429, '', { 'X-RateLimit-Reset': '999999' }) : response(200, '7'),
+  });
+  const pauses = [];
+  for (let i = 0; i < 7; i += 1) {
+    await assert.rejects(client.version());
+    pauses.push((client.pausedUntil - clock.now) / 3600000);
+    clock.now = client.pausedUntil;
+  }
+  assert.deepEqual(pauses, [1, 2, 4, 8, 16, 24, 24]);
+  limited = false;
+  assert.equal(await client.version(), '7');
+  assert.equal(client.strikes, 0);
 });

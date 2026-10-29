@@ -92,7 +92,7 @@ export class Monitor {
     const saved = await this.store.load();
     this.version = typeof saved.version === 'string' ? saved.version : null;
     this.checkedAt = Number.isFinite(saved.checkedAt) ? saved.checkedAt : 0;
-    this.client.restorePause(saved.pausedUntil);
+    this.client.restorePause(saved.pausedUntil, saved.strikes);
     for (const [id, at] of Object.entries(saved.failedAt ?? {})) {
       if (Number.isFinite(at)) {
         this.failedAt[id] = at;
@@ -261,7 +261,10 @@ export class Monitor {
         logger.debug(`Read ${id} (${records.length} records, version ${version})`);
       } catch (err) {
         if (err.rateLimited) {
-          throw err; // nothing more can be asked
+          // Nothing more can be asked: the cycle after the pause checks again.
+          this.checkedAt = 0;
+          err.downloaded = downloaded;
+          throw err;
         }
         // One broken dataset does not hold the others back.
         this.failedAt[id] = this.now();
@@ -439,6 +442,7 @@ export class Monitor {
       version: this.version,
       checkedAt: this.checkedAt,
       pausedUntil: this.client.pausedUntil,
+      strikes: this.client.strikes,
       failedAt: this.failedAt,
       datasets: this.datasets,
       seen: this.seen,
