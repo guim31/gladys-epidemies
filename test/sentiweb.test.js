@@ -153,3 +153,18 @@ test('429 answers in a row back off up to 24 hours; a success resets them', asyn
   assert.equal(await client.version(), '7');
   assert.equal(client.strikes, 0);
 });
+
+test('the backoff grows even when the server announces a short reset', async () => {
+  const clock = { now: 0 };
+  const client = new SentiwebClient({
+    now: () => clock.now,
+    fetch: async () => response(429, '', { 'X-RateLimit-Reset': '600' }),
+  });
+  const pauses = [];
+  for (let i = 0; i < 4; i += 1) {
+    await assert.rejects(client.version());
+    pauses.push((client.pausedUntil - clock.now) / 60000);
+    clock.now = client.pausedUntil;
+  }
+  assert.deepEqual(pauses, [10, 120, 240, 480]);
+});

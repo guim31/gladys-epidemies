@@ -64,7 +64,9 @@ export class SentiwebClient {
       ms = reset > 1e9 ? reset * 1000 - now : reset * 1000;
     }
     const cap = Math.min(HOUR_MS * 2 ** Math.max(0, this.strikes - 1), MAX_PAUSE_MS);
-    ms = Math.min(Math.max(ms, MIN_PAUSE_MS), cap);
+    // From the second 429 in a row, the step is waited for even if the server
+    // announces less: a blocked IP must not be probed every 10 minutes.
+    ms = this.strikes > 1 ? cap : Math.min(Math.max(ms, MIN_PAUSE_MS), cap);
     this.pausedUntil = Math.min(Math.max(this.pausedUntil, now + ms), now + cap);
   }
 
