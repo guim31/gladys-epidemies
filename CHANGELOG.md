@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-29
+
 ### Added
 
 - One device per area followed (the 13 regions of metropolitan France, and metropolitan France
@@ -20,3 +22,6 @@ the notes of the version's GitHub Release.
 - Scene action: the week of an area in one sentence, ready for a notification.
 - Dashboard widget: the diseases of an area with their rate and trend.
 - Feature names and texts in English, French, German and Spanish.
+
+[Unreleased]: https://github.com/guim31/gladys-epidemies/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-epidemies/releases/tag/v1.0.0
